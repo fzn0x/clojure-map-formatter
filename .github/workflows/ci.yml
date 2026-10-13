@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node --test tests/*.test.js
+      - name: Check the page stays CSP-clean
+        run: |
+          if grep -nE '<script>|<script [^>]*>[^<]+</script>| style="' index.html; then
+            echo "index.html has inline script or style; move it to js/ or css/ (see CONTRIBUTING.md)"
+            exit 1
+          fi

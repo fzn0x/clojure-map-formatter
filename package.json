@@ -1,0 +1,23 @@
+{
+  "name": "clojure-map-formatter",
+  "version": "1.0.0",
+  "description": "Format and beautify Clojure maps and EDN with proper indentation, or minify them for production. A static, dependency-free browser tool.",
+  "private": true,
+  "license": "MIT",
+  "author": "fzn0x",
+  "homepage": "https://fzn0x.github.io/clojure-map-formatter/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fzn0x/clojure-map-formatter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fzn0x/clojure-map-formatter/issues"
+  },
+  "keywords": ["clojure", "edn", "formatter", "beautifier", "minifier", "pretty-print"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

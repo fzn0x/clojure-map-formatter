@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clojure Map Formatter — beautify or minify EDN</title>
+<meta name="description" content="Format and beautify Clojure maps with proper indentation and aligned values, or minify them for production. Works with nested maps, vectors, lists, sets and all of EDN. Runs in your browser.">
+<meta name="theme-color" content="#FFCC00">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230B0B0B'/%3E%3Cpath d='M13 7.5c-2.4 0-3.4 1-3.4 3.3v2.3c0 1.4-.6 2.1-2.1 2.4v1c1.5.3 2.1 1 2.1 2.4v2.3c0 2.3 1 3.3 3.4 3.3M19 7.5c2.4 0 3.4 1 3.4 3.3v2.3c0 1.4.6 2.1 2.1 2.4v1c-1.5.3-2.1 1-2.1 2.4v2.3c0 2.3-1 3.3-3.4 3.3' fill='none' stroke='%23FFCC00' stroke-width='2.6' stroke-linecap='square'/%3E%3C/svg%3E">
+<script src="js/theme-init.js"></script>
+</head>
+<body>
+
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M3.5 10.6h12.2l-5-5L12.7 3.6 21.1 12l-8.4 8.4-2-2 5-5H3.5z" fill="currentColor"/></symbol>
+    <symbol id="i-braces" viewBox="0 0 24 24"><path d="M9.5 4C7.6 4 6.8 4.8 6.8 6.6v2.6c0 1.2-.5 1.8-1.8 2v1.6c1.3.2 1.8.8 1.8 2v2.6c0 1.8.8 2.6 2.7 2.6M14.5 4c1.9 0 2.7.8 2.7 2.6v2.6c0 1.2.5 1.8 1.8 2v1.6c-1.3.2-1.8.8-1.8 2v2.6c0 1.8-.8 2.6-2.7 2.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></symbol>
+    <symbol id="i-compress" viewBox="0 0 24 24"><path d="M2 10.8h5.6L5.2 8.4l1.7-1.7L12.2 12l-5.3 5.3-1.7-1.7 2.4-2.4H2zM22 10.8h-5.6l2.4-2.4-1.7-1.7L11.8 12l5.3 5.3 1.7-1.7-2.4-2.4H22z" fill="currentColor"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path d="M8 3h12v13h-3v-2.4h.6V5.4H10.4V6H8z" fill="currentColor"/><path d="M4 8h12v13H4zm2.4 2.4v8.2h7.2v-8.2z" fill="currentColor"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.6 13.4a4 4 0 0 0 5.7 0l3.6-3.6a4 4 0 0 0-5.7-5.7l-1.3 1.3M13.4 10.6a4 4 0 0 0-5.7 0l-3.6 3.6a4 4 0 0 0 5.7 5.7l1.3-1.3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" stroke="currentColor" stroke-width="2.2"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5 8.6 8.6 0 1 0 20.5 14.6z" fill="currentColor"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 1.8a7.4 7.4 0 0 0-7.4 7.4c0 5.4 7.4 13 7.4 13s7.4-7.6 7.4-13A7.4 7.4 0 0 0 12 1.8zm0 10.2a2.8 2.8 0 1 1 0-5.6 2.8 2.8 0 0 1 0 5.6z" fill="currentColor"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 2 1.5 21h21zm-1.3 6.5h2.6l-.3 6.6h-2zm1.3 8.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="currentColor"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m3 12.6 2.1-2.1 4.4 4.4L18.9 5.5 21 7.6 9.5 19.1z" fill="currentColor"/></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24"><path d="M8 2.5h8V6H8z" fill="currentColor"/><path d="M6 4h1.2v3.6h9.6V4H18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm2 8v2.2h8V12zm0 4.2v2.2h5.6v-2.2z" fill="currentColor"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><path d="m5.6 3.9 6.4 6.4 6.4-6.4 1.7 1.7-6.4 6.4 6.4 6.4-1.7 1.7-6.4-6.4-6.4 6.4-1.7-1.7 6.4-6.4-6.4-6.4z" fill="currentColor"/></symbol>
+    <symbol id="i-input" viewBox="0 0 24 24"><path d="M3 4h18v16H3zm2.4 2.4v11.2h13.2V6.4z" fill="currentColor"/><path d="m7 9.2 1.6-1.6 4.4 4.4-4.4 4.4L7 14.8 9.8 12zM13.2 15h4v2h-4z" fill="currentColor"/></symbol>
+    <symbol id="i-output" viewBox="0 0 24 24"><path d="M3 4h18v16H3zm2.4 2.4v11.2h13.2V6.4z" fill="currentColor"/><path d="M7 8.2h10v2H7zM9 11.2h8v2H9zM9 14.2h6v2H9z" fill="currentColor"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M2.5 4.5h7l2 2.2h10v3H7.2L4.6 18H2.5z" fill="currentColor"/><path d="M7.8 11.4h14.4L19 20H4.6z" fill="currentColor"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M10.8 2.5h2.4v9.4l3.3-3.3 1.7 1.7L12 16.5l-6.2-6.2 1.7-1.7 3.3 3.3z" fill="currentColor"/><path d="M3 15h2.4v3.6h13.2V15H21v6H3z" fill="currentColor"/></symbol>
+    <symbol id="i-json" viewBox="0 0 24 24"><path d="M8 4C6.2 4 5.4 4.8 5.4 6.6v2.6c0 1.2-.5 1.8-1.8 2v1.6c1.3.2 1.8.8 1.8 2v2.6C5.4 19.2 6.2 20 8 20M16 4c1.8 0 2.6.8 2.6 2.6v2.6c0 1.2.5 1.8 1.8 2v1.6c-1.3.2-1.8.8-1.8 2v2.6c0 1.8-.8 2.6-2.6 2.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/><path d="M9.2 9.6a1.5 1.5 0 1 0 0 .1M9.2 14.4a1.5 1.5 0 1 0 0 .1M14.8 9.6a1.5 1.5 0 1 0 0 .1M14.8 14.4a1.5 1.5 0 1 0 0 .1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+
+  <header class="top">
+    <a class="brand" href="./" aria-label="Clojure Map Formatter, home">
+      <span class="brand-mark"><svg><use href="#i-braces"/></svg></span>
+      <span class="brand-text">
+        <span class="brand-name">Clojure Map Formatter</span>
+        <span class="brand-sub">Beautify or minify EDN</span>
+      </span>
+    </a>
+
+    <div class="mode" role="radiogroup" aria-label="Output mode">
+      <label class="mode-opt">
+        <input type="radio" name="mode" value="beautify" checked>
+        <span><svg aria-hidden="true"><use href="#i-braces"/></svg>Beautify</span>
+      </label>
+      <label class="mode-opt">
+        <input type="radio" name="mode" value="minify">
+        <span><svg aria-hidden="true"><use href="#i-compress"/></svg>Minify</span>
+      </label>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn btn-ghost" id="share" type="button" title="Copy a link that carries this input">
+        <svg aria-hidden="true"><use href="#i-link"/></svg><span>Share link</span>
+      </button>
+      <button class="btn btn-ghost" id="download" type="button" title="Download the output as an .edn file">
+        <svg aria-hidden="true"><use href="#i-download"/></svg><span>Download</span>
+      </button>
+      <button class="btn btn-primary" id="copy" type="button" title="Copy output (Alt+C)">
+        <span class="btn-sq"><svg aria-hidden="true"><use href="#i-copy"/></svg></span><span>Copy output</span>
+      </button>
+      <button class="btn btn-icon" id="theme" type="button" aria-label="Switch to night theme">
+        <svg class="when-day" aria-hidden="true"><use href="#i-moon"/></svg>
+        <svg class="when-night" aria-hidden="true"><use href="#i-sun"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Examples">
+    <h2 class="rail-title">Examples</h2>
+    <ul class="examples" id="examples"></ul>
+  </nav>
+
+  <main class="work">
+    <section class="pane pane-in" aria-labelledby="in-label">
+      <div class="pane-head">
+        <h2 class="pane-title" id="in-label">
+          <span class="sq"><svg aria-hidden="true"><use href="#i-input"/></svg></span>Input
+        </h2>
+        <div class="pane-actions">
+          <button class="btn btn-small" id="open" type="button" title="Open an .edn, .clj or .json file"><svg aria-hidden="true"><use href="#i-open"/></svg>Open</button>
+          <input class="sr-only" type="file" id="file" tabindex="-1" aria-hidden="true" accept=".edn,.clj,.cljs,.cljc,.bb,.json,.txt,application/edn,application/json,text/plain">
+          <button class="btn btn-small" id="paste" type="button"><svg aria-hidden="true"><use href="#i-paste"/></svg>Paste</button>
+          <button class="btn btn-small" id="clear" type="button"><svg aria-hidden="true"><use href="#i-clear"/></svg>Clear</button>
+        </div>
+      </div>
+      <div class="panel panel-in">
+        <div class="editor" id="in-editor">
+          <pre class="hl" id="in-pre" aria-hidden="true"><code id="in-hl"></code></pre>
+          <textarea id="input" aria-labelledby="in-label" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="soft" placeholder="{:paste &quot;your EDN here&quot;}"></textarea>
+        </div>
+        <div class="drop" id="drop" hidden>
+          <span class="drop-sq"><svg aria-hidden="true"><use href="#i-download"/></svg></span>
+          <p class="drop-title">Drop to open</p>
+          <p class="drop-sub">.edn, .clj, .cljs, .json or plain text</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane pane-out" aria-labelledby="out-label">
+      <div class="pane-head">
+        <h2 class="pane-title" id="out-label">
+          <span class="sq"><svg aria-hidden="true"><use href="#i-output"/></svg></span>Output
+        </h2>
+        <fieldset class="opts" id="opts">
+          <legend class="sr-only">Layout options</legend>
+          <label class="opt switch" title="Line up map values in a column">
+            <input type="checkbox" id="opt-align" checked><span class="sw" aria-hidden="true"></span>Align
+          </label>
+          <span class="opt seg" id="opt-nested" role="radiogroup" aria-label="Nested values" title="Where a nested collection goes when it has to break: beside its key, or on the next line indented">
+            <span class="opt-label" aria-hidden="true">Nested</span>
+            <label><input type="radio" name="nested" value="beside" checked><span>Beside</span></label>
+            <label><input type="radio" name="nested" value="below"><span>Below</span></label>
+          </span>
+          <span class="opt seg" id="opt-indent" role="radiogroup" aria-label="Indent">
+            <span class="opt-label" aria-hidden="true">Indent</span>
+            <label><input type="radio" name="indent" value="1"><span>1</span></label>
+            <label><input type="radio" name="indent" value="2" checked><span>2</span></label>
+            <label><input type="radio" name="indent" value="4"><span>4</span></label>
+          </span>
+          <label class="opt sel">
+            <span class="opt-label">Width</span>
+            <select id="opt-width">
+              <option value="auto">Fit</option>
+              <option value="60">60</option>
+              <option value="80">80</option>
+              <option value="100">100</option>
+              <option value="120">120</option>
+            </select>
+          </label>
+          <label class="opt switch" title="Sort map keys">
+            <input type="checkbox" id="opt-sort"><span class="sw" aria-hidden="true"></span>Sort
+          </label>
+        </fieldset>
+      </div>
+      <div class="panel panel-out">
+        <div class="sign" id="sign">
+          <button class="sign-go" id="sign-go" type="button" aria-label="Show this form in the output">
+            <svg id="sign-icon" aria-hidden="true"><use href="#i-pin"/></svg>
+          </button>
+          <div class="sign-body">
+            <div class="sign-path" id="sign-path"></div>
+            <div class="sign-meta" id="sign-meta"></div>
+          </div>
+          <button class="btn btn-sign sign-copy" id="sign-copy" type="button">Copy path</button>
+          <button class="btn btn-sign sign-convert" id="sign-convert" type="button" hidden>Use as input</button>
+          <div class="sign-stat" id="sign-stat">
+            <span class="stat-big" id="stat-big"></span>
+            <span class="stat-small" id="stat-small"></span>
+          </div>
+        </div>
+        <div class="out-scroll" id="out-scroll" tabindex="0" role="region" aria-label="Formatted output">
+          <div class="out-grid">
+            <div class="gut" id="gut" aria-hidden="true"></div>
+            <pre class="out" id="out-pre"><code id="out"></code></pre>
+          </div>
+          <div class="empty" id="empty" hidden>
+            <span class="empty-sq"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+            <p class="empty-title">Paste EDN into Input</p>
+            <p class="empty-sub">or pick one of the examples</p>
+          </div>
+        </div>
+        <button class="edge-cue" id="edge-cue" type="button" tabindex="-1" aria-label="Scroll the output right" hidden>
+          <span class="edge-sq"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="status" id="status">
+    <span class="st-state" id="st-state"></span>
+    <span class="st-sep" aria-hidden="true"></span>
+    <span class="st-bytes" id="st-bytes"></span>
+    <span class="st-pos" id="st-pos"></span>
+    <span class="st-local">Runs in your browser. Nothing is uploaded.</span>
+  </footer>
+</div>
+
+<section class="guide" aria-labelledby="guide-title">
+  <div class="guide-inner">
+    <h2 class="guide-title" id="guide-title">How the formatter reads and writes</h2>
+    <dl class="directory">
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-arrow"/></svg></span>Reads</dt>
+        <dd>All of EDN: maps, vectors, lists, sets, keywords and namespaced keywords, symbols, strings, characters, numbers with <code>N</code>/<code>M</code> suffixes, ratios, <code>##Inf</code>, tagged literals like <code>#inst</code> and <code>#uuid</code>, metadata, <code>#:ns{}</code> maps, <code>#_</code> discards and <code>;</code> comments. Commas count as whitespace, the way the reader treats them.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-braces"/></svg></span>Beautify</dt>
+        <dd>A collection stays on one line while it fits the width. Once it breaks, map keys line up in a column with their values aligned. A value that cannot fit beside its key moves under it, indented. Comments, <code>#_</code> forms, and blank lines between groups stay where you put them.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-output"/></svg></span>Indent</dt>
+        <dd>Clojure lines a map's entries up under its opening bracket, so nesting reads by alignment. Set <b>Nested</b> to <b>Below</b> and a nested collection that has to break moves to the next line, indented by 1, 2 or 4 spaces. Indent also sets the body indent of code-like lists such as <code>(defn …)</code>.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>Validates</dt>
+        <dd>Unbalanced or mismatched brackets, unterminated strings, maps with a key and no value, duplicate map keys, duplicate set elements, and malformed numbers, keywords and characters. Each error names the line and column and offers a jump to it.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-json"/></svg></span>JSON</dt>
+        <dd>Paste JSON and the output shows it as EDN: object keys become keywords where they can be written as one, <code>null</code> becomes <code>nil</code>, and big numbers keep their digits. Choose <b>Use as input</b> to replace the JSON with the EDN.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-open"/></svg></span>Files</dt>
+        <dd>Open a file or drop one onto Input: <code>.edn</code>, <code>.clj</code>, <code>.cljs</code>, <code>.json</code> or plain text. <b>Download</b> saves the output as <code>.edn</code>, or <code>.min.edn</code> when minified.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-compress"/></svg></span>Minify</dt>
+        <dd>Removes comments and <code>#_</code> forms, and drops whitespace only beside brackets, so <code>{:a [1 2]}</code> becomes <code>{:a[1 2]}</code>. Atoms keep one space between them, so any EDN reader reads the result back as the same data.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-pin"/></svg></span>Find your way</dt>
+        <dd>Move the caret in Input, or point at anything in Output. The sign above the output shows its <code>get-in</code> path, what it is, and which way to scroll to reach it. Click a path segment to step out to that level.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-link"/></svg></span>Stays local</dt>
+        <dd>Parsing and formatting happen in this page. A share link carries your input compressed inside the URL itself, and nothing is stored on a server.</dd>
+      </div>
+      <div class="dir-row">
+        <dt><span class="sq"><svg aria-hidden="true"><use href="#i-input"/></svg></span>Keys</dt>
+        <dd class="keys"><span><kbd>Alt</kbd> <kbd>B</kbd> Beautify</span><span><kbd>Alt</kbd> <kbd>M</kbd> Minify</span><span><kbd>Alt</kbd> <kbd>C</kbd> Copy output</span><span><kbd>Tab</kbd> indents in Input, <kbd>Esc</kbd> then <kbd>Tab</kbd> moves on</span></dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden>
+  <span class="toast-sq"><svg id="toast-icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+  <span class="toast-text" id="toast-text"></span>
+  <button class="toast-action" id="toast-action" type="button" hidden></button>
+</div>
+<div class="sr-only" id="announce" aria-live="assertive"></div>
+
+<script src="js/edn.js"></script>
+<script src="js/examples.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
